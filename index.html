@@ -19,9 +19,9 @@
   </style>
 </head>
 <body>
-  <h1>🎥 Telegram Video Player</h1>
+  <h1>🎥 Hon's 1st year free class </h1>
 
-  <!-- Main video player -->
+  <!-- Native HTML5 video player -->
   <video id="player" controls></video>
 
   <!-- Playback speed -->
@@ -43,7 +43,7 @@
     const player = document.getElementById('player');
     const speedControl = document.getElementById('speed');
 
-    // Speed change handler
+    // Update playback speed
     speedControl.addEventListener('change', () => {
       player.playbackRate = parseFloat(speedControl.value);
     });

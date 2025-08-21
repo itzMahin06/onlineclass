@@ -4,24 +4,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Telegram Video Player</title>
-  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
   <style>
     body { font-family: Arial, sans-serif; background: #111; color: #fff; text-align: center; padding: 20px; }
-    .video-list { margin-top: 20px; }
-    button { margin: 5px; padding: 10px; border: none; border-radius: 6px; cursor: pointer; background: #444; color: #fff; }
+    video { width: 100%; max-width: 800px; border-radius: 10px; margin-top: 20px; display: block; margin-left: auto; margin-right: auto; }
+    .controls { margin-top: 10px; }
+    label { margin-right: 5px; }
+    .video-list { margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+    .video-card { background: #222; border-radius: 10px; padding: 10px; text-align: center; }
+    .video-card img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; }
+    .video-card h3 { font-size: 14px; margin: 8px 0; }
+    button { margin: 5px; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; background: #444; color: #fff; }
     button:hover { background: #666; }
+    select { padding: 5px; border-radius: 6px; background: #444; color: #fff; }
   </style>
 </head>
 <body>
   <h1>🎥 Telegram Video Player</h1>
 
-  <video id="player" playsinline controls></video>
+  <video id="player" controls></video>
 
+  <div class="controls">
+    <label for="speed">Playback Speed: </label>
+    <select id="speed">
+      <option value="0.5">0.5x</option>
+      <option value="1" selected>1x (Normal)</option>
+      <option value="1.25">1.25x</option>
+      <option value="1.5">1.5x</option>
+      <option value="2">2x</option>
+    </select>
+  </div>
+
+  <h2>📂 Video Gallery</h2>
   <div class="video-list" id="videoList">Loading videos...</div>
 
-  <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
   <script>
-    const player = new Plyr('#player');
+    const player = document.getElementById('player');
+    const speedControl = document.getElementById('speed');
+
+    // Speed change handler
+    speedControl.addEventListener('change', () => {
+      player.playbackRate = parseFloat(speedControl.value);
+    });
 
     async function loadVideos() {
       const res = await fetch('/api/videos');
@@ -31,16 +54,35 @@
       list.innerHTML = '';
 
       videos.forEach(v => {
-        const btn = document.createElement('button');
-        btn.textContent = v.title || 'Video';
-        btn.onclick = () => {
-          player.source = {
-            type: 'video',
-            sources: [{ src: `/api/stream?fileId=${v.file_id}`, type: 'video/mp4' }]
-          };
+        const card = document.createElement('div');
+        card.className = 'video-card';
+
+        const thumb = document.createElement('img');
+        thumb.src = v.thumb_url || 'https://via.placeholder.com/300x150.png?text=No+Thumbnail';
+        thumb.alt = v.title || 'Video thumbnail';
+
+        const title = document.createElement('h3');
+        title.textContent = v.title || 'Untitled Video';
+
+        const playBtn = document.createElement('button');
+        playBtn.textContent = '▶ Play';
+        playBtn.onclick = () => {
+          player.src = `/api/stream?fileId=${v.file_id}`;
           player.play();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         };
-        list.appendChild(btn);
+
+        const downloadBtn = document.createElement('button');
+        downloadBtn.textContent = '⬇ Download';
+        downloadBtn.onclick = () => {
+          window.open(`/api/stream?fileId=${v.file_id}`, '_blank');
+        };
+
+        card.appendChild(thumb);
+        card.appendChild(title);
+        card.appendChild(playBtn);
+        card.appendChild(downloadBtn);
+        list.appendChild(card);
       });
     }
 
